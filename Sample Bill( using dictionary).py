@@ -1,7 +1,7 @@
 price={
     "noodles":120,
     "biriyani":140,
-    "porotta with beef combo": 180,
+    "porotta with combo": 180,
     "meals":80
 }
 quantity={
