@@ -34,19 +34,20 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import precision_score
-
-# Load dataset
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 df = pd.read_csv("train.csv")
-
-# Define features and target
 X = df.drop(columns=["Credit Default", "Id"])
 y = df["Credit Default"]
 
-# Convert categorical columns to numeric if necessary
-X = X.apply(pd.to_numeric, errors='coerce')
+# Convert categorical columns to one-hot encoding if necessary
+categorical_cols = X.select_dtypes(include=['object']).columns
+if len(categorical_cols) > 0:
+    X = pd.get_dummies(X, columns=categorical_cols)
 
 # Handle missing values (basic approach)
 X = X.fillna(X.mean())
+scaler = StandardScaler()
+X = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
 
 # Split data without stratification
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -57,9 +58,7 @@ model.fit(X_train, y_train)
 
 # Get predictions and calculate precision
 baseline_preds = model.predict(X_test)
-baseline_precision = precision_score(y_test, baseline_preds)
-
-# Stratified split
+baseline_precision = precision_score(y_test, baseline_preds, average="binary")
 X_train_strat, X_test_strat, y_train_strat, y_test_strat = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y)
 
@@ -69,7 +68,7 @@ model_strat.fit(X_train_strat, y_train_strat)
 
 # Get predictions and calculate stratified precision
 stratified_preds = model_strat.predict(X_test_strat)
-stratified_precision = precision_score(y_test_strat, stratified_preds)
+stratified_precision = precision_score(y_test_strat, stratified_preds, average="binary")
 
 # Calculate gain in precision
 gain_in_precision = stratified_precision - baseline_precision
